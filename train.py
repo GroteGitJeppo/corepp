@@ -20,7 +20,19 @@ from sdfrenderer.grid import Grid3D
 from dataloaders.cameralaser_w_masks import MaskedCameraLaserData
 from dataloaders.transforms import Pad, Rotate, RandomHorizontalFlip, RandomVerticalFlip
 
-from networks.models import Encoder, EncoderBig, ERFNetEncoder, EncoderBigPooled, EncoderPooled, DoubleEncoder, PointCloudEncoder, PointCloudEncoderLarge, FoldNetEncoder
+from networks.models import (
+    Encoder,
+    EncoderBig,
+    ERFNetEncoder,
+    EncoderBigPooled,
+    EncoderPooled,
+    DoubleEncoder,
+    PointCloudEncoder,
+    PointCloudEncoderLarge,
+    FoldNetEncoder,
+    PointNet2EncoderSSG,
+    PointNet2EncoderMSG,
+)
 import networks.utils as net_utils
 
 from loss import KLDivLoss, SuperLoss, SDFLoss, RegLatentLoss, AttRepLoss
@@ -79,6 +91,10 @@ def main_function(decoder, pretrain, cfg, latent_size, trunc_val, overfit, updat
         encoder = PointCloudEncoderLarge(in_channels=3, out_channels=latent_size).to(device)
     elif param['encoder'] == 'foldnet':
         encoder = FoldNetEncoder(in_channels=3, out_channels=latent_size).to(device)
+    elif param['encoder'] == 'pointnet2_ssg':
+        encoder = PointNet2EncoderSSG(out_channels=latent_size).to(device)
+    elif param['encoder'] == 'pointnet2_msg':
+        encoder = PointNet2EncoderMSG(out_channels=latent_size).to(device)
     else:
         encoder = Encoder(in_channels=4, out_channels=latent_size, size=param["input_size"]).to(device)
 
@@ -141,7 +157,7 @@ def main_function(decoder, pretrain, cfg, latent_size, trunc_val, overfit, updat
             loss = 0
 
             # unpacking inputs
-            if param['encoder'] != 'point_cloud' and param['encoder'] != 'point_cloud_large' and param['encoder'] != 'foldnet':
+            if param['encoder'] not in ('point_cloud', 'point_cloud_large', 'foldnet', 'pointnet2_ssg', 'pointnet2_msg'):
                 encoder_input = torch.cat((item['rgb'], item['depth']), 1).to(device)
             else:
                 encoder_input = item['partial_pcd'].permute(0, 2, 1).to(device) ## be aware: the current partial pcd is not registered to the target pcd!
@@ -259,7 +275,7 @@ def main_function(decoder, pretrain, cfg, latent_size, trunc_val, overfit, updat
                 print('\nvalidation...')
                 for _, item in enumerate(tqdm(iter(val_dataset))):
                     try:
-                        if param['encoder'] != 'point_cloud' and param['encoder'] != 'point_cloud_large' and param['encoder'] != 'foldnet':
+                        if param['encoder'] not in ('point_cloud', 'point_cloud_large', 'foldnet', 'pointnet2_ssg', 'pointnet2_msg'):
                             encoder_input = torch.cat((item['rgb'], item['depth']), 1).to(device)
                         else:
                             encoder_input = item['partial_pcd'].permute(0, 2, 1).to(device)
