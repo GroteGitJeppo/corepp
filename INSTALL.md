@@ -38,6 +38,8 @@ Software: Pytorch 2.1.0, torchvision 0.16.0, Python 3.10, CUDA 12.1 <br/> <br/>
 - torch.cuda.get_device_name(0) *(should print the name of the first GPU)*
 - quit() <br/> <br/>
 
+**CUDA extension builds (PointNet2, etc.):** PyTorch reports CUDA **12.1** from its wheel; `nvcc` for compiling extensions should match **12.1.x**. The environment pins **conda-forge** `cuda-version`, `cuda-nvcc`, and `cuda-cudart-dev` at 12.1 (not `nvidia::cuda-toolkit` alone), because the latter can resolve to **CUDA 13.x** inside conda. After changing `environment.yml`, recreate or update the env (`conda env update -f environment.yml --prune`). If `nvcc --version` still shows 13.x from `$CONDA_PREFIX/bin/nvcc`, remove the env and run `conda env create -f environment.yml` again. If `nvcc` is 13.x but `which nvcc` is outside the env, fix **PATH**: `export PATH="$CONDA_PREFIX/bin:$PATH"` (see `environment.yml` comments). <br/> <br/>
+
 **Optional**: alter ~/.bashrc file to prevent libGL error when doing open3d visualization, refer to [link](https://github.com/conda-forge/ctng-compilers-feedstock/issues/95)
 - cd ..
 - sudo gedit ~/.bashrc

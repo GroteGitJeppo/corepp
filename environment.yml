@@ -2,8 +2,9 @@
 # (matplotlib, pandas, tqdm, scikit-learn, scipy) and Pointnet2.PyTorch/tools (tensorboard_logger).
 # Also: pinned CUDA 12.1.x toolkit (nvcc/headers) and GCC 12.3.x for building CUDA extensions (e.g. PointNet2).
 #
-# PyTorch cu121 wheels bundle the CUDA *runtime* they load at import time; conda cuda-toolkit
-# supplies nvcc/headers for compiling extensions. Keep cuda-toolkit on 12.1.* only.
+# PyTorch cu121 wheels bundle the CUDA *runtime* they load at import time; conda supplies
+# nvcc/headers for compiling extensions. Do NOT use nvidia::cuda-toolkit alone — the solver
+# can still pick CUDA 13.x; use conda-forge cuda-version + cuda-nvcc pinned to 12.1 instead.
 #
 # PyTorch install matrix: https://pytorch.org/get-started/locally/ (CUDA 12.1)
 #
@@ -12,26 +13,36 @@
 #
 # Before building extensions (PointNet2 setup.py):
 #   export CUDA_HOME="$CONDA_PREFIX"
-#   export PATH="$CONDA_PREFIX/bin:$PATH"
+#   export PATH="$CONDA_PREFIX/bin:$PATH"   # MUST come before system CUDA (e.g. /usr/local/cuda)
+#
+# If `nvcc --version` shows 13.x while `which nvcc` is under $CONDA_PREFIX, conda installed
+# the wrong CUDA: recreate the env from this file (conda-forge pins below). If 13.x is from
+# PATH, put $CONDA_PREFIX/bin first. After fixes: conda list cuda-version cuda-nvcc
+#
 # Optional: export TORCH_CUDA_ARCH_LIST="8.6"   # e.g. NVIDIA A40 (Ampere)
 #
 # Verify:
 #   python -c "import torch; print(torch.__version__, torch.version.cuda)"   # 2.1.0, 12.1
-#   nvcc --version                                                           # 12.1.x
-#   x86_64-conda-linux-gnu-gcc --version                                   # 12.3.x
+#   which nvcc && nvcc --version                                               # 12.1.x from conda
+#   test -x "$CONDA_PREFIX/bin/nvcc" && "$CONDA_PREFIX/bin/nvcc" --version
+#   x86_64-conda-linux-gnu-gcc --version                                       # 12.3.x
 #
 name: corepp
+# conda-forge first: CUDA compiler packages must resolve here, not to nvidia channel 13.x metapackages.
 channels:
-  - nvidia
   - conda-forge
+  - nvidia
   - defaults
 dependencies:
   - python=3.10
   - pip
-  - nvidia::cuda-toolkit=12.1.*
+  # Lock entire CUDA toolchain to 12.1 (avoids nvidia::cuda-toolkit metapackage resolving to 13.x).
+  - cuda-version=12.1
+  - cuda-nvcc=12.1.*
+  - cuda-cudart-dev=12.1.*
   # Host compilers for nvcc (CUDA 12.1 supports GCC through 12.x on Linux; keep gcc/gxx matched).
-  - conda-forge::gcc_linux-64=12.3.*
-  - conda-forge::gxx_linux-64=12.3.*
+  - gcc_linux-64=12.3.*
+  - gxx_linux-64=12.3.*
   - pip:
     # Equivalent to: pip install torch==... torchvision==... -f https://download.pytorch.org/whl/cu121/torch_stable.html
     - --extra-index-url https://download.pytorch.org/whl/cu121
