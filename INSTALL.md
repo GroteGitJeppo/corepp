@@ -10,6 +10,8 @@ Software: Pytorch 2.1.0, torchvision 0.16.0, Python 3.10, CUDA 12.1 <br/> <br/>
 - conda create --name corepp python=3.10 pip
 - conda activate corepp <br/> <br/>
 
+**Alternative (reproducible, from `environment.yml`):** from the `corepp` repository root, run `conda env create -f environment.yml` (or `conda env update -f environment.yml --prune` to refresh an existing env). This pins the same package versions as step 4 below, and also installs a matching CUDA 12.1.x toolkit (nvcc) plus GCC/G++ 12.3.x for compiling CUDA extensions such as PointNet2; see the comments at the top of `environment.yml` for `CUDA_HOME` and verification commands. <br/> <br/>
+
 **3) Download the code repository:**
 - git clone https://github.com/UTokyo-FieldPhenomics-Lab/corepp.git 
 - cd corepp <br/> <br/>
@@ -24,9 +26,11 @@ Software: Pytorch 2.1.0, torchvision 0.16.0, Python 3.10, CUDA 12.1 <br/> <br/>
 - pip install diskcache==5.6.3
 - pip install tensorboard==2.15.1
 - pip install numba==0.58.1 
-- pip install opencv-python==4.8.1.78 <br/> <br/>
+- pip install opencv-python==4.8.1.78
+- pip install matplotlib==3.8.2 pandas==2.1.4 scikit-learn==1.3.2 scipy==1.11.4 tqdm==4.66.1
+- pip install tensorboard_logger==0.1.0 *(optional: only if you use Pointnet2.PyTorch `tools/train_and_eval.py`)* <br/> <br/>
 
-**5) Check if Pytorch links with CUDA (in the corepp virtual environment, using the terminal):**
+**5) Check if Pytorch links with CUDA (in the corepp virtual environment, using the terminal):** (same checks after `conda env create -f environment.yml`.)
 - python
 - import torch
 - torch.version.cuda *(should print 12.1)*
