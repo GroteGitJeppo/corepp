@@ -10,7 +10,7 @@ Software: Pytorch 2.1.0, torchvision 0.16.0, Python 3.10, CUDA 12.1 <br/> <br/>
 - conda create --name corepp python=3.10 pip
 - conda activate corepp <br/> <br/>
 
-**Alternative (reproducible, from `environment.yml`):** from the `corepp` repository root, run `conda env create -f environment.yml` (or `conda env update -f environment.yml --prune` to refresh an existing env). This pins the same package versions as step 4 below, and also installs a matching CUDA 12.1.x toolkit (nvcc) plus GCC/G++ 12.3.x for compiling CUDA extensions such as PointNet2; see the comments at the top of `environment.yml` for `CUDA_HOME` and verification commands. <br/> <br/>
+**Alternative (reproducible, from `environment.yml`):** from the `corepp` repository root, run `conda env create -f environment.yml` (or `conda env update -f environment.yml --prune` to refresh an existing env). This pins the same package versions as step 4 below, including pip **torch/torchvision (cu121)** and **`setuptools>=69,<81`** for PyTorch 2.1 compatibility. PointNet++ is used from a **pure PyTorch** tree (`Pointnet_Pointnet2_pytorch/`); no conda CUDA toolkit or `nvcc` is required. <br/> <br/>
 
 **3) Download the code repository:**
 - git clone https://github.com/UTokyo-FieldPhenomics-Lab/corepp.git 
@@ -28,7 +28,7 @@ Software: Pytorch 2.1.0, torchvision 0.16.0, Python 3.10, CUDA 12.1 <br/> <br/>
 - pip install numba==0.58.1 
 - pip install opencv-python==4.8.1.78
 - pip install matplotlib==3.8.2 pandas==2.1.4 scikit-learn==1.3.2 scipy==1.11.4 tqdm==4.66.1
-- pip install tensorboard_logger==0.1.0 *(optional: only if you use Pointnet2.PyTorch `tools/train_and_eval.py`)* <br/> <br/>
+- pip install "setuptools>=69,<81" *(recommended for PyTorch 2.1 / `pkg_resources` compatibility)* <br/> <br/>
 
 **5) Check if Pytorch links with CUDA (in the corepp virtual environment, using the terminal):** (same checks after `conda env create -f environment.yml`.)
 - python
@@ -38,7 +38,7 @@ Software: Pytorch 2.1.0, torchvision 0.16.0, Python 3.10, CUDA 12.1 <br/> <br/>
 - torch.cuda.get_device_name(0) *(should print the name of the first GPU)*
 - quit() <br/> <br/>
 
-**CUDA extension builds (PointNet2, etc.):** PyTorch reports CUDA **12.1** from its wheel; `nvcc` for compiling extensions should match **12.1.x**. The environment pins **conda-forge** `cuda-version`, `cuda-nvcc`, and `cuda-cudart-dev` at 12.1 (not `nvidia::cuda-toolkit` alone), because the latter can resolve to **CUDA 13.x** inside conda. After changing `environment.yml`, recreate or update the env (`conda env update -f environment.yml --prune`). If `nvcc --version` still shows 13.x from `$CONDA_PREFIX/bin/nvcc`, remove the env and run `conda env create -f environment.yml` again. If `nvcc` is 13.x but `which nvcc` is outside the env, fix **PATH**: `export PATH="$CONDA_PREFIX/bin:$PATH"` (see `environment.yml` comments). <br/> <br/>
+**PointNet++:** use the **`Pointnet_Pointnet2_pytorch/`** tree with this environment. You do **not** need to compile custom `.cu` extensions in the repo. GPU acceleration comes from the **PyTorch cu121** wheels above. **`pytorch3d`** is included in `environment.yml` as an **optional** dependency (prebuilt wheel + `iopath`): it speeds up farthest-point sampling, ball query, and feature-propagation kNN. If `pytorch3d` fails to install for your platform, remove those pip lines and the code **falls back** to the original pure-PyTorch ops. <br/> <br/>
 
 **Optional**: alter ~/.bashrc file to prevent libGL error when doing open3d visualization, refer to [link](https://github.com/conda-forge/ctng-compilers-feedstock/issues/95)
 - cd ..

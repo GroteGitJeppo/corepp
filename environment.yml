@@ -1,51 +1,31 @@
 # corepp conda environment — INSTALL.md pip pins plus extra imports used across corepp/
-# (matplotlib, pandas, tqdm, scikit-learn, scipy) and Pointnet2.PyTorch/tools (tensorboard_logger).
-# Also: pinned CUDA 12.1.x toolkit (nvcc/headers) and GCC 12.3.x for building CUDA extensions (e.g. PointNet2).
+# (matplotlib, pandas, tqdm, scikit-learn, scipy).
 #
-# PyTorch cu121 wheels bundle the CUDA *runtime* they load at import time; conda supplies
-# nvcc/headers for compiling extensions. Do NOT use nvidia::cuda-toolkit alone — the solver
-# can still pick CUDA 13.x; use conda-forge cuda-version + cuda-nvcc pinned to 12.1 instead.
+# PointNet++: sibling tree Pointnet_Pointnet2_pytorch/ — no project-local CUDA extension build (no nvcc).
+# Optional pytorch3d (pip wheel) accelerates FPS / ball query / FP kNN; falls back to pure PyTorch if absent.
 #
+# PyTorch cu121 wheels bundle the CUDA runtime for GPU; no conda nvcc or CUDA toolkit required.
 # PyTorch install matrix: https://pytorch.org/get-started/locally/ (CUDA 12.1)
 #
 # Create: conda env create -f environment.yml
 # Update: conda env update -f environment.yml --prune
 #
-# Before building extensions (PointNet2 setup.py):
-#   export CUDA_HOME="$CONDA_PREFIX"
-#   export PATH="$CONDA_PREFIX/bin:$PATH"   # MUST come before system CUDA (e.g. /usr/local/cuda)
-#
-# If `nvcc --version` shows 13.x while `which nvcc` is under $CONDA_PREFIX, conda installed
-# the wrong CUDA: recreate the env from this file (conda-forge pins below). If 13.x is from
-# PATH, put $CONDA_PREFIX/bin first. After fixes: conda list cuda-version cuda-nvcc
-#
-# Optional: export TORCH_CUDA_ARCH_LIST="8.6"   # e.g. NVIDIA A40 (Ampere)
-#
 # Verify:
-#   python -c "import torch; print(torch.__version__, torch.version.cuda)"   # 2.1.0, 12.1
-#   which nvcc && nvcc --version                                               # 12.1.x from conda
-#   test -x "$CONDA_PREFIX/bin/nvcc" && "$CONDA_PREFIX/bin/nvcc" --version
-#   x86_64-conda-linux-gnu-gcc --version                                       # 12.3.x
+#   python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+#   # expect 2.1.0, 12.1, True on a machine with a CUDA GPU and driver
 #
 name: corepp
-# conda-forge first: CUDA compiler packages must resolve here, not to nvidia channel 13.x metapackages.
 channels:
   - conda-forge
-  - nvidia
   - defaults
 dependencies:
   - python=3.10
   - pip
-  # Lock entire CUDA toolchain to 12.1 (avoids nvidia::cuda-toolkit metapackage resolving to 13.x).
-  - cuda-version=12.1
-  - cuda-nvcc=12.1.*
-  - cuda-cudart-dev=12.1.*
-  # Host compilers for nvcc (CUDA 12.1 supports GCC through 12.x on Linux; keep gcc/gxx matched).
-  - gcc_linux-64=12.3.*
-  - gxx_linux-64=12.3.*
   - pip:
     # Equivalent to: pip install torch==... torchvision==... -f https://download.pytorch.org/whl/cu121/torch_stable.html
     - --extra-index-url https://download.pytorch.org/whl/cu121
+    # setuptools>=81 can drop pkg_resources; pin for compatibility with PyTorch 2.1 tooling.
+    - setuptools>=69,<81
     - torch==2.1.0
     - torchvision==0.16.0
     - open3d==0.17.0
@@ -57,11 +37,12 @@ dependencies:
     - tensorboard==2.15.1
     - numba==0.58.1
     - opencv-python==4.8.1.78
-    # Used by corepp scripts (train/test/metrics/data_prep, etc.)
+    # Used by corepp scripts (train/test/metrics/data_prep, etc.) and Pointnet_Pointnet2_pytorch visualizer
     - matplotlib==3.8.2
     - pandas==2.1.4
     - scikit-learn==1.3.2
     - scipy==1.11.4
     - tqdm==4.66.1
-    # Pointnet2.PyTorch/tools/train_and_eval.py
-    - tensorboard_logger==0.1.0
+    # PyTorch3D: iopath is a runtime dependency. Wheel matches py310 + torch 2.1 + cu118; works with cu121 PyTorch wheels.
+    - iopath
+    - "pytorch3d==0.7.7 --no-index --no-cache-dir -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py310_cu118_pyt210/download.html"
