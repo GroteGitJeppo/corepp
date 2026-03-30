@@ -1,8 +1,8 @@
 {
   "Description" :  "Potato Deepsdf Pretrain latent=32",
-  "DataSource" : "/home/pieter/corepp/data", 
-  "TrainSplit" : "/home/pieter/corepp/deepsdf/experiments/splits/potato_train.json",
-  "TestSplit" : "/home/pieter/corepp/deepsdf/experiments/splits/potato_test.json",
+  "DataSource" : "./corepp/data", 
+  "TrainSplit" : "./deepsdf/experiments/splits/potato_train.json",
+  "TestSplit" : "./deepsdf/experiments/splits/potato_test.json",
   "NetworkArch" : "deep_sdf_decoder",
   "NetworkSpecs" : {
     "dims" : [ 512, 512, 512, 512, 512, 512, 512, 512 ],
