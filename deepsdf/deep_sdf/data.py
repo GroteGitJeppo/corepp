@@ -18,7 +18,7 @@ def get_instance_filenames(data_source, split):
         for class_name in split[dataset]:
             for instance_name in split[dataset][class_name]:
                 instance_filename = os.path.join(
-                    data_source, class_name, instance_name, "laser/samples.npz"
+                    class_name, instance_name, "laser/samples.npz"
                 )
                 if not os.path.isfile(
                     os.path.join(data_source, ws.sdf_samples_subdir, instance_filename)
