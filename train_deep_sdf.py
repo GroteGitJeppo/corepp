@@ -266,8 +266,13 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     logging.info("Experiment description: \n" + specs["Description"])
 
-    data_source = specs["DataSource"]
-    train_split_file = specs["TrainSplit"]
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+
+    def resolve_path(p):
+        return p if os.path.isabs(p) else os.path.join(root_dir, p)
+
+    data_source = resolve_path(specs["DataSource"])
+    train_split_file = resolve_path(specs["TrainSplit"])
 
     arch = __import__("deepsdf.networks." + specs["NetworkArch"], fromlist=["Decoder"])
 
